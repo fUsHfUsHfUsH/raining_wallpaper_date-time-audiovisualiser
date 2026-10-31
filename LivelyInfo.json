@@ -1,10 +1,10 @@
 {
   "AppVersion": "2.0.6.1",
-  "Title": "Rain",
+  "Title": "Raining Wallpaper (Date-Time + Visualiser)",
   "Thumbnail": "thumbnail.jpg",
   "Preview": "preview.gif",
-  "Desc": "Rainy window with customisation",
-  "Author": "rocksdanister",
+  "Desc": "Rainy window with clock, audio visualiser, Now Playing and storm cloud (fork of rocksdanister/rain)",
+  "Author": "rocksdanister (forked & extended)",
   "License": "See License.txt",
   "Contact": "https://github.com/rocksdanister/rain",
   "Type": 1,
