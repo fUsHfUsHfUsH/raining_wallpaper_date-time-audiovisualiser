@@ -4,11 +4,19 @@ const gui = new dat.GUI();
 let isPaused = false,
   elapsedResetTime = 21600,
   elapsedPreviousTime = 0;
+let previousFrameTime = performance.now();
 let devicePixelRatio = window.devicePixelRatio || 1;
 
 let scene, camera, renderer, material;
 let settings = { fps: 30, scale: 1.0, parallaxVal: 1, parallaxStrength: 1, parallaxDistance: 90, parallaxDamp: 0.07 };
 let videoElement;
+
+//audio visualizer & date/time overlay
+const visualizer = new RainVisualizer(document.getElementById("visualizer"));
+const rainClock = new RainClock();
+const nowPlaying = new NowPlaying(visualizer);
+//idle wave / "Waiting for media" hand-off between visualizer and track text
+visualizer.onIdleChange = (idle) => nowPlaying.setIdle(idle);
 
 //custom events
 const sceneLoadedEvent = new Event("sceneLoaded");
@@ -30,6 +38,7 @@ async function init() {
       u_intensity: { value: 0.4, type: "f" },
       u_speed: { value: 0.25, type: "f" },
       u_brightness: { value: 0.8, type: "f" },
+      u_cloud: { value: 0, type: "f" },
       u_normal: { value: 0.5, type: "f" },
       u_zoom: { value: 2.61, type: "f" },
       u_blur_intensity: { value: 0.5, type: "f" },
@@ -49,7 +58,9 @@ async function init() {
           }
         `,
   });
-  material.fragmentShader = await (await fetch("shaders/rain.frag")).text();
+  //bump when editing shaders - browser otherwise caches rain.frag aggressively
+  const shaderVersion = 4;
+  material.fragmentShader = await (await fetch(`shaders/rain.frag?v=${shaderVersion}`)).text();
   resize();
 
   material.uniforms.u_tex0_resolution.value = new THREE.Vector2(1920, 1080);
@@ -98,8 +109,21 @@ function render() {
   }, 1000 / settings.fps);
 
   //reset every 6hr
-  if (clock.getElapsedTime() > elapsedResetTime) clock = new THREE.Clock();
+  const elapsed = clock.getElapsedTime();
+  if (elapsed > elapsedResetTime) clock = new THREE.Clock();
   material.uniforms.u_time.value = clock.getElapsedTime();
+
+  //visualizer timestep (freezes on pause)
+  const now = performance.now();
+  const dt = Math.min((now - previousFrameTime) / 1000, 0.1); //clamp to avoid huge jumps
+  previousFrameTime = now;
+  visualizer.render(isPaused ? 0 : dt);
+
+  //storm cloud: a long, leisurely roll-in; clears quickly afterwards
+  const cloudTarget = material.uniforms.u_lightning.value ? 1 : 0;
+  const cloud = material.uniforms.u_cloud;
+  const cloudRate = cloudTarget ? 0.22 : 0.9;
+  cloud.value += (cloudTarget - cloud.value) * Math.min(1, dt * cloudRate);
 
   renderer.render(scene, camera);
 }
@@ -118,11 +142,24 @@ function livelyWallpaperPlaybackChanged(data) {
   }
 }
 
+//lively current track (LivelyInfo.json "--system-nowplaying")
+function livelyCurrentTrack(data) {
+  nowPlaying.setTrack(data);
+}
+
+//lively system audio (LivelyInfo.json "--audio")
+//128 length array, values typically 0-1
+function livelyAudioListener(audioArray) {
+  visualizer.setLivelyData(audioArray);
+}
+
 init();
 
 //lively api
 //docs: https://github.com/rocksdanister/lively/wiki/Web-Guide-IV-:-Interaction
 function livelyPropertyListener(name, val) {
+  visualizer.setLivelyMode(); //Lively calls this on startup - no demo beat inside Lively
+  nowPlaying.setLivelyMode();
   switch (name) {
     case "blurIntensity":
       material.uniforms.u_blur_intensity.value = val / 100;
@@ -201,7 +238,82 @@ function livelyPropertyListener(name, val) {
       break;
     case "displayScaling":
       setScale(val);
-      break;  
+      break;
+    case "visualizerChk":
+      visualizer.settings.enabled = val;
+      break;
+    case "visualizerAmplitude":
+      visualizer.settings.amplitude = val;
+      nowPlaying.applyLayout();
+      break;
+    case "visualizerDotSize":
+      visualizer.settings.dotScale = val;
+      nowPlaying.applyLayout();
+      break;
+    case "visualizerMode":
+      visualizer.settings.sortingMode = val;
+      nowPlaying.applyLayout();
+      break;
+    case "visualizerColor":
+      visualizer.settings.color = val;
+      break;
+    case "visualizerRainbowChk":
+      visualizer.settings.rainbow = val;
+      break;
+    case "visualizerDepth":
+      visualizer.settings.depth = val / 100;
+      break;
+    case "visualizerBalance":
+      visualizer.settings.balance = val / 100;
+      break;
+    case "nowPlayingChk":
+      nowPlaying.settings.enabled = val;
+      nowPlaying.render();
+      break;
+    case "nowPlayingSize":
+      nowPlaying.settings.size = val / 100;
+      nowPlaying.applyStyle();
+      break;
+    case "nowPlayingColor":
+      nowPlaying.settings.color = val;
+      nowPlaying.applyStyle();
+      break;
+    case "nowPlayingOpacity":
+      nowPlaying.settings.opacity = val / 100;
+      nowPlaying.applyStyle();
+      break;
+    case "clockChk":
+      rainClock.settings.enabled = val;
+      rainClock.applyStyle();
+      break;
+    case "clockFormat":
+      rainClock.settings.format24h = [true, false][val];
+      rainClock.update();
+      break;
+    case "clockSecondsChk":
+      rainClock.settings.showSeconds = val;
+      rainClock.update();
+      break;
+    case "clockDateChk":
+      rainClock.settings.showDate = val;
+      rainClock.update();
+      break;
+    case "clockPosition":
+      rainClock.settings.position = val;
+      rainClock.applyStyle();
+      break;
+    case "clockSize":
+      rainClock.settings.size = val / 100;
+      rainClock.applyStyle();
+      break;
+    case "clockColor":
+      rainClock.settings.color = val;
+      rainClock.applyStyle();
+      break;
+    case "clockOpacity":
+      rainClock.settings.opacity = val / 100;
+      rainClock.applyStyle();
+      break;
     case "debug":
       if (val) gui.show();
       else gui.hide();
@@ -213,10 +325,16 @@ function livelyPropertyListener(name, val) {
 function datUI() {
   let rain = gui.addFolder("Rain");
   let bg = gui.addFolder("Background");
+  let viz = gui.addFolder("Visualizer");
+  let clk = gui.addFolder("Clock");
+  let np = gui.addFolder("Now Playing");
   let perf = gui.addFolder("Performance");
   let misc = gui.addFolder("More");
   rain.open();
   bg.open();
+  viz.open();
+  clk.open();
+  np.open();
   perf.open();
   misc.open();
   rain.add(material.uniforms.u_intensity, "value", 0, 1, 0.01).name("Intensity");
@@ -239,6 +357,79 @@ function datUI() {
   bg.add(material.uniforms.u_texture_fill, "value").name("Scale to Fill");
   bg.add(material.uniforms.u_panning, "value").name("Panning");
   bg.add(material.uniforms.u_post_processing, "value").name("Post Processing");
+  viz.add(visualizer.settings, "enabled").name("Enabled");
+  viz.add(visualizer.settings, "amplitude", 0, 50, 0.1).name("Amplitude");
+  viz.add(visualizer.settings, "dotScale", 0, 5, 0.1).name("Dot Size");
+  let tempVizMode = { value: ["Concentrated", "Center-split", "Keep original"][visualizer.settings.sortingMode] };
+  viz
+    .add(tempVizMode, "value", ["Concentrated", "Center-split", "Keep original"])
+    .name("Spectrum Mode")
+    .onChange(function () {
+      visualizer.settings.sortingMode = ["Concentrated", "Center-split", "Keep original"].indexOf(tempVizMode.value);
+    });
+  viz.addColor(visualizer.settings, "color").name("Color");
+  viz.add(visualizer.settings, "rainbow").name("Rainbow");
+  viz.add(visualizer.settings, "depth", 0, 1, 0.01).name("Depth");
+  viz.add(visualizer.settings, "balance", 0, 1, 0.01).name("High Freq");
+  viz
+    .add(
+      {
+        idle: function () {
+          visualizer.forceIdle = !visualizer.forceIdle;
+        },
+      },
+      "idle"
+    )
+    .name("Preview Idle Wave");
+  viz
+    .add(
+      {
+        mic: function () {
+          visualizer.source === "mic" ? visualizer.useDemo() : visualizer.useMicrophone();
+        },
+      },
+      "mic"
+    )
+    .name("Toggle Microphone");
+  clk.add(rainClock.settings, "enabled").name("Enabled").onChange(() => rainClock.applyStyle());
+  clk.add(rainClock.settings, "format24h").name("24h Format");
+  clk.add(rainClock.settings, "showSeconds").name("Seconds");
+  clk.add(rainClock.settings, "showDate").name("Date");
+  let tempClockPos = { value: ["Top Left", "Top Right", "Bottom Left", "Bottom Right", "Middle"][rainClock.settings.position] };
+  clk
+    .add(tempClockPos, "value", ["Top Left", "Top Right", "Bottom Left", "Bottom Right", "Middle"])
+    .name("Position")
+    .onChange(function () {
+      rainClock.settings.position = ["Top Left", "Top Right", "Bottom Left", "Bottom Right", "Middle"].indexOf(tempClockPos.value);
+      rainClock.applyStyle();
+    });
+  clk.add(rainClock.settings, "size", 0.4, 2.5, 0.05).name("Size").onChange(() => rainClock.applyStyle());
+  clk.addColor(rainClock.settings, "color").name("Color").onChange(() => rainClock.applyStyle());
+  clk.add(rainClock.settings, "opacity", 0, 1, 0.01).name("Opacity").onChange(() => rainClock.applyStyle());
+  np.add(nowPlaying.settings, "enabled").name("Enabled").onChange(() => nowPlaying.render());
+  np.add(nowPlaying.settings, "size", 0.4, 2.5, 0.05).name("Size").onChange(() => nowPlaying.applyStyle());
+  np.addColor(nowPlaying.settings, "color").name("Color").onChange(() => nowPlaying.applyStyle());
+  np.add(nowPlaying.settings, "opacity", 0, 1, 0.01).name("Opacity").onChange(() => nowPlaying.applyStyle());
+  np
+    .add(
+      {
+        demo: function () {
+          nowPlaying.setTrack({ Title: "Demo Song", Artist: "Rainy Window" });
+        },
+      },
+      "demo"
+    )
+    .name("Show Example Track");
+  np
+    .add(
+      {
+        clear: function () {
+          nowPlaying.setTrack(null);
+        },
+      },
+      "clear"
+    )
+    .name("Hide Track");
   perf.add(settings, "fps", 15, 120, 15).name("FPS");
   let tempScale = { value: settings.scale }; //don't update global value
   perf

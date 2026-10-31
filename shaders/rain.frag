@@ -11,6 +11,7 @@ uniform float u_speed;
 uniform float u_intensity;
 uniform float u_normal;
 uniform float u_brightness;
+uniform float u_cloud;
 uniform float u_blur_intensity;
 uniform float u_zoom;
 uniform int u_blur_iterations;
@@ -184,10 +185,13 @@ void main() {
     }
     float fade = S(0., 10., T);							// fade in at the start
 
+    //storm cloud: modest grey dimming while the lightning toggle is on
+    col *= mix(vec3(1.), vec3(0.58, 0.58, 0.60), u_cloud);
+
     if(u_lightning) {
         float lightning = sin(t * sin(t * 10.));				// lighting flicker
         lightning *= pow(max(0., sin(t + sin(t))), 10.);		// lightning flash
-        col *= 1. + lightning * fade * mix(1., .1, 0.);	// composite lightning
+        col *= 1. + lightning * fade * 0.75;	// composite lightning (slightly softened)
     }
     col *= 1. - dot(UV -= .5, UV) * 1.; // vignette
 

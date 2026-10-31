@@ -114,6 +114,129 @@
     "value": false,
     "text": "Lightning"
   },
+  "visualizerChk": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Audio Visualizer"
+  },
+  "visualizerAmplitude": {
+    "max": 50,
+    "min": 0,
+    "step": 0.1,
+    "text": "Visualizer Amplitude",
+    "type": "slider",
+    "value": 8
+  },
+  "visualizerDotSize": {
+    "max": 5,
+    "min": 0,
+    "step": 0.1,
+    "text": "Visualizer Dot Size",
+    "type": "slider",
+    "value": 0.5
+  },
+  "visualizerMode": {
+    "type": "dropdown",
+    "value": 2,
+    "text": "Visualizer Spectrum Mode",
+    "items": ["Concentrated", "Center-split", "Keep original"]
+  },
+  "visualizerColor": {
+    "text": "Visualizer Color",
+    "type": "color",
+    "value": "#FFFFFF"
+  },
+  "visualizerRainbowChk": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Visualizer Rainbow"
+  },
+  "visualizerDepth": {
+    "max": 100,
+    "min": 0,
+    "step": 1,
+    "text": "Visualizer Depth",
+    "type": "slider",
+    "value": 65
+  },
+  "visualizerBalance": {
+    "max": 100,
+    "min": 0,
+    "step": 1,
+    "text": "Visualizer High Frequency",
+    "type": "slider",
+    "value": 60
+  },
+  "nowPlayingChk": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Now Playing"
+  },
+  "nowPlayingSize": {
+    "max": 200,
+    "min": 40,
+    "text": "Now Playing Size",
+    "type": "slider",
+    "value": 100
+  },
+  "nowPlayingColor": {
+    "text": "Now Playing Color",
+    "type": "color",
+    "value": "#FFFFFF"
+  },
+  "nowPlayingOpacity": {
+    "max": 100,
+    "min": 0,
+    "text": "Now Playing Opacity",
+    "type": "slider",
+    "value": 90
+  },
+  "clockChk": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Date/Time Display"
+  },
+  "clockFormat": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Time Format",
+    "items": ["24h", "12h"]
+  },
+  "clockSecondsChk": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Show Seconds"
+  },
+  "clockDateChk": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Show Date"
+  },
+  "clockPosition": {
+    "type": "dropdown",
+    "value": 1,
+    "text": "Clock Position",
+    "items": ["Top Left", "Top Right", "Bottom Left", "Bottom Right", "Middle"]
+  },
+  "clockSize": {
+    "max": 250,
+    "min": 40,
+    "text": "Clock Size",
+    "type": "slider",
+    "value": 100
+  },
+  "clockColor": {
+    "text": "Clock Color",
+    "type": "color",
+    "value": "#FFFFFF"
+  },
+  "clockOpacity": {
+    "max": 100,
+    "min": 0,
+    "text": "Clock Opacity",
+    "type": "slider",
+    "value": 90
+  },
   "fpsLock": {
     "type": "checkbox",
     "value": true,

@@ -15,6 +15,64 @@ body {
   opacity: 0; /*set to 1 after sceneLoaded event*/
 }
 
+/*audio visualizer overlay*/
+#visualizer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/*date/time display*/
+#clock {
+  position: fixed;
+  z-index: 11;
+  pointer-events: none;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-weight: 300;
+  line-height: 1.1;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  user-select: none;
+}
+
+#clock .clock-time {
+  letter-spacing: 0.02em;
+}
+
+#clock .clock-date {
+  margin-top: 0.35em;
+  font-size: 0.32em;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+/*now playing display (song title + artist under the visualizer)*/
+#nowplaying {
+  position: fixed;
+  z-index: 11;
+  pointer-events: none;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-weight: 300;
+  line-height: 1.2;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  user-select: none;
+  white-space: nowrap;
+  transition: opacity 0.4s ease;
+}
+
+#nowplaying .np-artist {
+  margin-top: 0.42em;
+  font-size: 0.4em;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
 /*loading progressbar*/
 .indeterminate-progress-bar {
   box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
@@ -54,4 +112,22 @@ body {
   100% {
     opacity: 1;
   }
+}
+
+/*dat.GUI controls panel: scroll instead of running off the bottom of the screen*/
+.dg.main > ul {
+  max-height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+
+.dg.main > ul::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dg.main > ul::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dg.main > ul::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.25);
 }
