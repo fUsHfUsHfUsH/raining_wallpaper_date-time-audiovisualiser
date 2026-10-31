@@ -119,6 +119,11 @@
     "value": true,
     "text": "Audio Visualizer"
   },
+  "audioDebugChk": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Visualizer Audio Diagnostics"
+  },
   "visualizerAmplitude": {
     "max": 50,
     "min": 0,

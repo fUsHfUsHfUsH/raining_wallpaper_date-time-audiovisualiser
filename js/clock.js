@@ -42,13 +42,21 @@ class RainClock {
 
   update() {
     const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
 
-    this.timeEl.textContent = now.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: this.settings.showSeconds ? "2-digit" : undefined,
-      hour12: !this.settings.format24h,
-    });
+    //hours: 12h shows "9" not "09"; 24h keeps the leading zero
+    let hours = now.getHours();
+    let suffix = "";
+    if (this.settings.format24h) {
+      hours = pad(hours);
+    } else {
+      suffix = hours >= 12 ? " PM" : " AM";
+      hours = (hours % 12) || 12;
+    }
+
+    let text = `${hours}:${pad(now.getMinutes())}`;
+    if (this.settings.showSeconds) text += `:${pad(now.getSeconds())}`;
+    this.timeEl.textContent = text + suffix;
 
     this.dateEl.textContent = now.toLocaleDateString([], {
       weekday: "long",

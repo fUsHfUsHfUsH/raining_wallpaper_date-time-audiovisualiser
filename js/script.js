@@ -150,8 +150,39 @@ function livelyCurrentTrack(data) {
 //lively system audio (LivelyInfo.json "--audio")
 //128 length array, values typically 0-1
 function livelyAudioListener(audioArray) {
+  //some Lively builds deliver this as a JSON string instead of an array
+  if (typeof audioArray === "string") {
+    try {
+      audioArray = JSON.parse(audioArray);
+    } catch (e) {
+      return; //not json, ignore
+    }
+    if (!Array.isArray(audioArray)) return;
+  }
   visualizer.setLivelyData(audioArray);
 }
+
+//audio diagnostics overlay: shows what livelyAudioListener is actually receiving
+const audioDebugEl = document.createElement("div");
+audioDebugEl.style.cssText =
+  "position:fixed;bottom:58px;left:12px;z-index:70;padding:8px 12px;border-radius:8px;" +
+  "background:rgba(0,0,0,.6);color:#a8e6c3;font:13px/1.5 Consolas,monospace;" +
+  "white-space:pre;display:none;pointer-events:none;";
+document.body.appendChild(audioDebugEl);
+setInterval(() => {
+  if (!visualizer || !visualizer.audioDebug) {
+    audioDebugEl.style.display = "none";
+    return;
+  }
+  audioDebugEl.style.display = "block";
+  const v = visualizer;
+  audioDebugEl.textContent =
+    `Lively audio diagnostics\n` +
+    `source: ${v.source}\n` +
+    `packets received: ${v.livelyPackets}\n` +
+    `loudest bin (last packet): ${isNaN(v.livelyMax) ? "none" : v.livelyMax.toFixed(4)}\n` +
+    `idle wave: ${v.idle}`;
+}, 500);
 
 init();
 
@@ -241,6 +272,9 @@ function livelyPropertyListener(name, val) {
       break;
     case "visualizerChk":
       visualizer.settings.enabled = val;
+      break;
+    case "audioDebugChk":
+      visualizer.audioDebug = val;
       break;
     case "visualizerAmplitude":
       visualizer.settings.amplitude = val;
@@ -391,6 +425,7 @@ function datUI() {
       "mic"
     )
     .name("Toggle Microphone");
+  viz.add(visualizer, "audioDebug").name("Audio Diagnostics");
   clk.add(rainClock.settings, "enabled").name("Enabled").onChange(() => rainClock.applyStyle());
   clk.add(rainClock.settings, "format24h").name("24h Format");
   clk.add(rainClock.settings, "showSeconds").name("Seconds");

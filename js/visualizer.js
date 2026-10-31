@@ -62,6 +62,11 @@ class RainVisualizer {
     this.forceIdle = false; //browser preview of the idle wave
     this.onIdleChange = null;
 
+    //audio diagnostics (debug overlay)
+    this.audioDebug = false;
+    this.livelyPackets = 0;
+    this.livelyMax = NaN;
+
     this.resize();
     window.addEventListener("resize", () => this.resize());
   }
@@ -83,6 +88,9 @@ class RainVisualizer {
   setLivelyData(audioArray) {
     this.livelyData = audioArray;
     this.source = "lively";
+    //diagnostics for the audio-debug overlay
+    this.livelyPackets++;
+    this.livelyMax = audioArray ? Math.max(...audioArray) : NaN;
   }
 
   // Running inside Lively: no audio data means silence, never the demo beat.
